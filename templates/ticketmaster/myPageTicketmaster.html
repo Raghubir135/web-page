@@ -1,0 +1,58 @@
+{% extends 'ticketmaster/baseTicketmaster.html' %}
+
+{% block body %}
+
+    <div class="container-fluid bg-primary text-white text-center">
+
+        <h1 class="display-1">Ticketmaster</h1>
+        <h1>Quickly find tickets around you</h1>
+
+        <form action="{% url 'ticketmaster-index' %}" method="post">
+            {% csrf_token %}
+            <div class="row justify-content-center">
+                <div class="col-lg-5">
+                    <div class="input-group mb-3" style="margin-top: 25px;">
+                        <input type="text" name="events" class="form-control"
+                               placeholder="Search by genre, artist or event">
+                        <input type="text" name="city" class="form-control"
+                               placeholder="Enter a city e.g., Hartford">
+                        <button class="btn btn-danger" type="submit">SEARCH</button>
+
+                    </div>
+                    {% for message in messages %}
+                        <div class="alert alert-danger" role="alert">
+                            <h5>{{ message }}</h5>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+
+
+
+
+        {% if users %}
+            <section class="shadow p-5" id="user-container">
+                {% for user in users %}
+                    <div class="card mb-3">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-sm-4">
+                                <img src="{{ user.picture }}" class="card-img rounded p-1" alt="profile-image">
+                            </div>
+                            <div class="col-sm-8">
+                                <div class="card-body">
+                                    <h1 class="card-title">{{ user.venueName }}</h1>
+                                    <p class="card-text">{{ user.venueCity }}</p>
+                                    <p class="card-text">{{ user.venueState }}</p>
+                                     <p class="card-text">{{ user.venueAddress }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+    </div>
+
+
+{% endblock %}

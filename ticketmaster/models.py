@@ -2,6 +2,6 @@ from django.db import models
 
 
 # Create your models here.
-class entry(models.Model):
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+class Entry(models.Model):
+    events = models.CharField(max_length=30)
+    city = models.CharField(max_length=30)
