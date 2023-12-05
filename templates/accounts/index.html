@@ -1,0 +1,22 @@
+{% extends 'accounts/base.html' %}
+{% load static %}
+
+{% block title %}
+    Index Page
+{% endblock %}
+
+{% block body %}
+
+    <section class="container p-5 shadow my-5 bg-body rounded">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1 class="display-3 text-sm-start text-center">Hello, {{ user.username }}!</h1>
+                <p class="lead">Thanks for logged in to the website</p>
+            </div>
+            <div class="col-lg-5">
+                <img src="{% static 'images/authorization-and-authentication.jpeg' %}" alt="security_guard" class="img-fluid">
+            </div>
+        </div>
+    </section>
+
+{% endblock %}
