@@ -1,5 +1,4 @@
 {% extends 'ticketmaster/baseTicketmaster.html' %}
-
 {% block body %}
 
     <div class="container-fluid bg-primary text-white text-center">
@@ -60,8 +59,9 @@
                                                 </p>
                                                 <!-- Display comments for the current event -->
                                                 <div id="comment-list-{{ event.eventID }}">
-                                                    {% for comment in event.event.comments.all %}
-                                                        <p>{{ comment.user.username }}: {{ comment.comment }}-{{ comment.created_at }}</p>
+                                                    {% for comment in event.comments.all %}
+                                                        <p>{{ comment.user.username }}: {{ comment.comment }}
+                                                            - {{ comment.created_at }}</p>
                                                     {% endfor %}
                                                 </div>
                                             </div>
@@ -152,6 +152,7 @@
                     return;
                 }
 
+                // Create a new comment
                 $.ajax({
                     url: '{% url 'create_comment' %}',
                     type: 'POST',
@@ -160,10 +161,8 @@
                         csrfmiddlewaretoken: '{{ csrf_token }}',
                         eventID: eventID
                     },
-                    success: function (response) {
-                        if (response.deleted) {
-                            //sendButton.remove();
-                        }
+                    success: function (createResponse) {
+                        // Handle success of creating a new comment
 
                         // Clear the comment text area
                         messageInput.val('');
@@ -171,10 +170,34 @@
                         // Show success message
                         showSuccessMessage('Comment added successfully!');
 
-                        // Append the new comment to the comment list
-                        const commentList = $("#comment-list-" + eventID);
-                        const newComment = `<p>${response.username}: ${response.comment} - ${response.created_at}</p>`;
-                        commentList.append(newComment);
+                        // Retrieve all comments for the current event
+                        $.ajax({
+                            url: '{% url 'get_comments' %}',
+                            type: 'GET',
+                            data: {
+                                eventID: eventID
+                            },
+                            success: function (getResponse) {
+                                const commentList = $("#comment-list-" + eventID);
+
+                                // Clear existing comments
+                                commentList.empty();
+
+                                // Append the existing comments to the comment list
+                                for (const comment of getResponse.comments) {
+                                    const formattedComment = `<p>${comment.username}: ${comment.comment} - ${comment.created_at}</p>`;
+                                    commentList.append(formattedComment);
+                                }
+                            },
+                            error: function (getErrors) {
+                                // Handle errors during comment retrieval
+                                console.error('Error retrieving comments:', getErrors);
+                            }
+                        });
+                    },
+                    error: function (createErrors) {
+                        // Handle errors during comment creation
+                        console.error('Error creating comment:', createErrors);
                     }
                 });
             });
