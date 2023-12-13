@@ -96,9 +96,16 @@ def index(request):
                 messages.info(request, 'No event found.')
                 total_nums_of_events = 0
 
-            context = {'events': user_list, 'total_events': total_nums_of_events, 'tasks': tasks}
+            # Retrieve the user's comments
+            user_comments = Comment.objects.filter(user=request.user)
+
+            context = {'events': user_list, 'total_events': total_nums_of_events, 'tasks': tasks,
+                       'user_comments': user_comments}
             return render(request, 'ticketmaster/myPageTicketmaster.html', context)
-    context = {'tasks': tasks}
+
+    # Retrieve the user's comments if no search is performed
+    user_comments = Comment.objects.filter(user=request.user)
+    context = {'tasks': tasks, 'user_comments': user_comments}
     return render(request, 'ticketmaster/myPageTicketmaster.html', context)
 
 
@@ -137,6 +144,24 @@ def get_events(events, city):
         return None
 
 
+def get_comments(request):
+    if request.method == 'GET':
+        eventID = request.GET.get('eventID')
+        comments = Comment.objects.filter(eventID=eventID)
+
+        response_data = {
+            'comments': [
+                {
+                    'username': comment.user.username,
+                    'comment': comment.comment,
+                    'created_at': comment.created_at.strftime('%Y-%m-%d'),
+                }
+                for comment in comments
+            ]
+        }
+    return JsonResponse(response_data)
+
+
 # CRUD Operations: Create, Retrieve, Update, Delete
 @login_required(login_url='login')
 def create_comment(request):
@@ -157,9 +182,12 @@ def create_comment(request):
 
 
 @login_required(login_url='login')
-def update_comment(request):
-    # Get the product based on its id
-    # comment = Comment.objects.get(id=eventID, user=request.user)
+def update_comment(request, event_id):
+    # Get the comment based on its id
+    comment = Comment.objects.get(id=event_id, user=request.user)
+
+    # if request.method == 'POST':
+
     return None
 
 
