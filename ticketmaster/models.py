@@ -1,5 +1,3 @@
-from django.db import models
-
 # Create your models here.
 from django.db import models
 from django.contrib.auth.models import User
@@ -11,4 +9,6 @@ class Comment(models.Model):
     # Since each user can have many comments, 1-to-many relationship is needed.
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     comment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+    eventID = models.CharField(max_length=20, blank=True, null=True)
+
