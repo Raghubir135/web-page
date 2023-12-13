@@ -1,0 +1,184 @@
+{% extends 'ticketmaster/baseTicketmaster.html' %}
+
+{% block body %}
+
+    <div class="container-fluid bg-primary text-white text-center">
+        <h1 class="display-1">Ticketmaster</h1>
+        <h1>Quickly find tickets around you</h1>
+
+        <form action="{% url 'index' %}" method="post">
+            {% csrf_token %}
+            <div class="row justify-content-center">
+                <div class="col-lg-5">
+                    <div class="input-group mb-3" style="margin-top: 25px;">
+                        <input type="text" name="events" class="form-control"
+                               placeholder="Search by genre, artist or event">
+                        <input type="text" name="city" class="form-control"
+                               placeholder="Enter a city e.g., Hartford">
+                        <button class="btn btn-danger" type="submit">SEARCH</button>
+                    </div>
+
+                    {% for message in messages %}
+                        <div class="alert alert-danger" role="alert">
+                            <h5>{{ message }}</h5>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if events %}
+        <div class="container my-5  p-5 shadow-lg bg-white rounded" id="event-container">
+            <div class="row align-items-center g-2">
+                <div class="col-md">
+                    <h3 class="text-secondary">{{ total_events }} Total Events</h3>
+                    {% for event in events %}
+                        <div class="shadow-lg mt-4">
+                            <div class="card mb-3">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <img src="{{ event.imageUrl }}" class="img-fluid rounded-start"
+                                             alt="event-image">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row">
+                                            <div class="col-sm-7 col-6">
+                                                <h5 class="card-title">{{ event.eventName }}</h5>
+                                                <h5 class="card-text">{{ event.venueName }}</h5>
+                                                <p class="card-text">{{ event.venueAddress }}</p>
+                                                <p class="card-text">{{ event.venueCity }}, {{ event.venueState }}</p>
+
+                                                <p class="card-text"><a href="{{ event.ticketLink }}" target="_blank"
+                                                                        class="btn btn-primary">Find Ticket</a>
+                                                    <button onclick="sendComment('{{ event.eventID }}')"
+                                                            class="btn btn-primary"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#model-{{ event.eventID }}"
+                                                            data-bs-whatever="@fat">Leave a Comment!
+                                                    </button>
+                                                </p>
+                                                <!-- Display comments for the current event -->
+                                                <div id="comment-list-{{ event.eventID }}">
+                                                    {% for comment in event.event.comments.all %}
+                                                        <p>{{ comment.user.username }}: {{ comment.comment }}-{{ comment.created_at }}</p>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+
+                                            <div class="col-sm-5 col-6 text-end p-4">
+                                                <p class="fs-5 text-success fw-bold">{{ event.eventDate }}</p>
+                                                <p class="fs-5 text-success fw-bold">{{ event.eventTime }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="model-{{ event.eventID }}" tabindex="-1"
+                             aria-labelledby="exampleModalLabel"
+                             aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Post the Comment</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label for="message-text" class="col-form-label">Comment:</label>
+                                                <textarea class="form-control" id="message-{{ event.eventID }}"
+                                                          name="message"></textarea>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                                        </button>
+                                        <button type="button" class="btn btn-primary"
+                                                id="send-message-button-{{ event.eventID }}">Send message
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        </div>
+    {% endif %}
+
+    <!-- Success message element -->
+    <div id="success-message" class="alert alert-success" role="alert" style="display: none;">
+        <!-- Success message content will be inserted here -->
+    </div>
+{% endblock %}
+
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            {% for event in events %}
+                // Call commentModal function for each event
+                commentModal('{{ event.eventID }}');
+            {% endfor %}
+        });
+
+        function showSuccessMessage(message) {
+            // Display success message
+            $('#success-message').text(message).fadeIn();
+
+            // Hide the message after a delay (e.g., 3 seconds)
+            setTimeout(function () {
+                $('#success-message').fadeOut();
+            }, 3000);
+        }
+
+        function commentModal(eventID) {
+            const messageInput = $("#message-" + eventID);
+            const sendButton = $("#send-message-button-" + eventID);
+
+            sendButton.click(function () {
+                const message = messageInput.val();
+
+                // Check if the comment is empty
+                if (message.trim() === '') {
+                    // Optionally, you can display a warning message or take other actions
+                    console.log('Comment cannot be empty!');
+                    return;
+                }
+
+                $.ajax({
+                    url: '{% url 'create_comment' %}',
+                    type: 'POST',
+                    data: {
+                        message: message,
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        eventID: eventID
+                    },
+                    success: function (response) {
+                        if (response.deleted) {
+                            //sendButton.remove();
+                        }
+
+                        // Clear the comment text area
+                        messageInput.val('');
+
+                        // Show success message
+                        showSuccessMessage('Comment added successfully!');
+
+                        // Append the new comment to the comment list
+                        const commentList = $("#comment-list-" + eventID);
+                        const newComment = `<p>${response.username}: ${response.comment} - ${response.created_at}</p>`;
+                        commentList.append(newComment);
+                    }
+                });
+            });
+        }
+    </script>
+{% endblock %}
+

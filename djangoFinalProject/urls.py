@@ -16,8 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from ticketmaster import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('ticketmaster/', include('ticketmaster.urls'))
+    path('', include('accounts.urls')),
+    path('ticketmaster/', include('ticketmaster.urls')),
+    path('accounts/', include('accounts.urls')),
+
 ]
